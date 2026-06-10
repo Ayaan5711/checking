@@ -9,6 +9,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpStatus;
 import org.json.JSONException;
+import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -20,7 +21,6 @@ import com.tcs.genai.gemini.model.Content;
 import com.tcs.genai.gemini.model.GenerateContentRequest;
 import com.tcs.genai.gemini.model.GenerateContentResponse;
 import com.tcs.genai.gemini.model.GenerationConfig;
-import com.tcs.genai.gemini.model.Part;
 import com.tcs.genai.gemini.model.SafetySetting;
 import com.tcs.genai.prompt.service.interfacehub.VendorPayloadAdapterFactory;
 import com.tcs.genai.prompt.utils.GenAIFrameworkConstants;
@@ -53,8 +53,8 @@ import com.tcs.genai.prompt.utils.GenAIFrameworkConstants;
  *
  * <p>Payload JSON keys:
  * <ul>
- *   <li>{@code "prompt"}       – user message (required)</li>
- *   <li>{@code "systemPrompt"} – system instruction (optional)</li>
+ *   <li>{@code "contents"}          – array of {@code {"role":..., "parts":[{"text":...}]}} turns (required)</li>
+ *   <li>{@code "systemInstruction"} – {@code {"parts":[{"text":...}]}} system instruction (optional)</li>
  * </ul>
  */
 @SuppressWarnings("unchecked")
@@ -101,18 +101,23 @@ public class GeminiEngineInvoker implements EngineInvokerAdapter {
         // --- 2. Build Gemini request JSON ---
         String requestJson;
         try {
-            String userPromptText   = (String) payload.get("prompt");
-            String systemPromptText = payload.get("systemPrompt") != null
-                    ? (String) payload.get("systemPrompt") : "";
-
-            Content userContent    = new Content("user", Arrays.asList(new Part(userPromptText)));
-            Content systemContent  = new Content(Arrays.asList(new Part(systemPromptText)));
-            GenerationConfig genConfig = new GenerationConfig(temperature, maxTokens, topP);
-            GenerateContentRequest request = new GenerateContentRequest(
-                    Arrays.asList(userContent), systemContent, genConfig, defaultSafetySettings());
-
             ObjectMapper objectMapper = new ObjectMapper()
                     .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+
+            JSONArray contentsJson = (JSONArray) payload.get(GenAIFrameworkConstants.GEMINI_CONTENTS_KEY);
+            List<Content> contents = objectMapper.readValue(contentsJson.toJSONString(),
+                    objectMapper.getTypeFactory().constructCollectionType(List.class, Content.class));
+
+            Content systemInstruction = null;
+            Object systemInstructionJson = payload.get(GenAIFrameworkConstants.GEMINI_SYSTEM_INSTRUCTION_KEY);
+            if (systemInstructionJson != null) {
+                systemInstruction = objectMapper.readValue(systemInstructionJson.toString(), Content.class);
+            }
+
+            GenerationConfig genConfig = new GenerationConfig(temperature, maxTokens, topP);
+            GenerateContentRequest request = new GenerateContentRequest(
+                    contents, systemInstruction, genConfig, defaultSafetySettings());
+
             requestJson = objectMapper.writeValueAsString(request);
         } catch (Exception e) {
             logger.error(GenAIFrameworkConstants.LOGGER_ERROR

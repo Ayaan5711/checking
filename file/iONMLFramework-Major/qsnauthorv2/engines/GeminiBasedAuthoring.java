@@ -183,15 +183,12 @@ public class GeminiBasedAuthoring {
 			}
 			logger.error("Generating " + questionType + " question for Chunk num : " + chunkIndex);
 
-			JSONArray promptMessages = buildPromptMessages(questionType, chunk, inputBean);
-			logger.error("Final prompt for " + questionType + " : " + promptMessages);
-
+			JSONObject geminiPayload = buildPromptMessages(questionType, chunk, inputBean);
+			logger.error("Final prompt for " + questionType + " : " + geminiPayload);
 
 			// EngineInvocationService routes to GeminiEngineInvoker via EngineInvokerFactory
 			EngineInvocationService engineService = new EngineInvocationService(
 					inputBean.getAIvendorCredNodeMap());
-			JSONObject geminiPayload = new JSONObject();
-			geminiPayload.put("contents", promptMessages);
 			JSONObject geminiResult = engineService.invokeAdvanceAiEngine(geminiPayload, parameterMap);
 
 			totalQuestionsGenerated = processGeminiResponse(geminiResult, questionType,
@@ -201,7 +198,7 @@ public class GeminiBasedAuthoring {
 		}
 	}
 
-	private JSONArray buildPromptMessages(String questionType, Chunk chunk, InputBean inputBean) throws IOException {
+	private JSONObject buildPromptMessages(String questionType, Chunk chunk, InputBean inputBean) throws IOException {
 		switch (questionType) {
 			case "mcq":              return promptBuilder.getMCQPrompt(inputBean, chunk);
 			case "faq":              return promptBuilder.getShortAnswerPrompt(inputBean, chunk);
@@ -209,7 +206,7 @@ public class GeminiBasedAuthoring {
 			case "msq":              return promptBuilder.getMSQPrompt(inputBean, chunk);
 			case "fillblanks":       return promptBuilder.getFillInTheBlanksPrompt(inputBean, chunk);
 			case "comprehensionmcq": return promptBuilder.getComprehensionPrompt(inputBean, chunk);
-			default:                 return new JSONArray();
+			default:                 return new JSONObject();
 		}
 	}
 

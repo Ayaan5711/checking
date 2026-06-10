@@ -28,10 +28,11 @@ public class GeminiPromptBuilder {
 	private static final Log logger = LogFactory.getLog(GeminiPromptBuilder.class);
 	Map<String, String> parameterMap = new HashMap<String, String>();
 
-	public JSONArray getMCQPrompt(InputBean inputBean, Chunk chunk) throws IOException {
+	@SuppressWarnings("unchecked")
+	public JSONObject getMCQPrompt(InputBean inputBean, Chunk chunk) throws IOException {
 		logger.error("-----Inside getMCQPrompt----");
 		QuestionTypeConfig qTypeConfig = inputBean.getQuestionTypeConfigMap().get("mcq");
-		JSONArray promptMessages = new JSONArray();
+		JSONObject promptPayload = new JSONObject();
 		try {
 			JSONObject payloadFromGenAI = callGenAIUtility(
 				inputBean.getAIvendorCredNodeMap(),
@@ -48,20 +49,28 @@ public class GeminiPromptBuilder {
 			logger.error("Extracted contents array: " + contentsNode);
 			JSONParser parser = new JSONParser();
 			JSONArray dbMessages = (JSONArray) parser.parse(contentsNode.toString());
-			promptMessages = preparePromptFromDBPayload(dbMessages, inputBean, chunk, qTypeConfig, "MCQ");
-			logger.error("Final prompt messages after replacement (MCQ): " + promptMessages);
+			JSONArray promptMessages = preparePromptFromDBPayload(dbMessages, inputBean, chunk, qTypeConfig, "MCQ");
+			promptPayload.put("contents", promptMessages);
+
+			JsonNode systemInstructionNode = payloadNode.get("systemInstruction");
+			if (systemInstructionNode != null) {
+				JSONObject systemInstruction = (JSONObject) parser.parse(systemInstructionNode.toString());
+				promptPayload.put("systemInstruction",
+						prepareSystemInstructionFromDBPayload(systemInstruction, inputBean, chunk, qTypeConfig, "MCQ"));
+			}
+			logger.error("Final prompt payload after replacement (MCQ): " + promptPayload);
 		} catch (Exception e) {
 			logger.error("Error while generating MCQ prompt", e);
 			throw new IOException("Failed to generate prompt", e);
 		}
-		return promptMessages;
+		return promptPayload;
 	}
 
 	@SuppressWarnings("unchecked")
-	public JSONArray getMSQPrompt(InputBean inputBean, Chunk chunk) throws IOException {
+	public JSONObject getMSQPrompt(InputBean inputBean, Chunk chunk) throws IOException {
 		logger.error("-----Inside getMSQPrompt----");
 		QuestionTypeConfig qTypeConfig = inputBean.getQuestionTypeConfigMap().get("msq");
-		JSONArray promptMessages = new JSONArray();
+		JSONObject promptPayload = new JSONObject();
 		try {
 			JSONObject payloadFromGenAI = callGenAIUtility(
 				inputBean.getAIvendorCredNodeMap(),
@@ -77,20 +86,28 @@ public class GeminiPromptBuilder {
 			logger.error("Extracted contents array: " + contentsNode);
 			JSONParser parser = new JSONParser();
 			JSONArray dbMessages = (JSONArray) parser.parse(contentsNode.toString());
-			promptMessages = preparePromptFromDBPayload(dbMessages, inputBean, chunk, qTypeConfig, "multi-select");
-			logger.error("Final prompt messages after replacement (MSQ): " + promptMessages);
+			JSONArray promptMessages = preparePromptFromDBPayload(dbMessages, inputBean, chunk, qTypeConfig, "multi-select");
+			promptPayload.put("contents", promptMessages);
+
+			JsonNode systemInstructionNode = payloadNode.get("systemInstruction");
+			if (systemInstructionNode != null) {
+				JSONObject systemInstruction = (JSONObject) parser.parse(systemInstructionNode.toString());
+				promptPayload.put("systemInstruction",
+						prepareSystemInstructionFromDBPayload(systemInstruction, inputBean, chunk, qTypeConfig, "multi-select"));
+			}
+			logger.error("Final prompt payload after replacement (MSQ): " + promptPayload);
 		} catch (Exception e) {
 			logger.error("Error while generating MSQ prompt", e);
 			throw new IOException("Failed to generate prompt", e);
 		}
-		return promptMessages;
+		return promptPayload;
 	}
 
 	@SuppressWarnings("unchecked")
-	public JSONArray getShortAnswerPrompt(InputBean inputBean, Chunk chunk) throws IOException {
+	public JSONObject getShortAnswerPrompt(InputBean inputBean, Chunk chunk) throws IOException {
 		logger.error("-----Inside getShortAnswerPrompt----");
 		QuestionTypeConfig qTypeConfig = inputBean.getQuestionTypeConfigMap().get("faq");
-		JSONArray promptMessages = new JSONArray();
+		JSONObject promptPayload = new JSONObject();
 		try {
 			JSONObject payloadFromGenAI = callGenAIUtility(
 				inputBean.getAIvendorCredNodeMap(),
@@ -106,20 +123,28 @@ public class GeminiPromptBuilder {
 			logger.error("Extracted contents array: " + contentsNode);
 			JSONParser parser = new JSONParser();
 			JSONArray dbMessages = (JSONArray) parser.parse(contentsNode.toString());
-			promptMessages = preparePromptFromDBPayload(dbMessages, inputBean, chunk, qTypeConfig, "short-answer");
-			logger.error("Final prompt messages after replacement (FAQ): " + promptMessages);
+			JSONArray promptMessages = preparePromptFromDBPayload(dbMessages, inputBean, chunk, qTypeConfig, "short-answer");
+			promptPayload.put("contents", promptMessages);
+
+			JsonNode systemInstructionNode = payloadNode.get("systemInstruction");
+			if (systemInstructionNode != null) {
+				JSONObject systemInstruction = (JSONObject) parser.parse(systemInstructionNode.toString());
+				promptPayload.put("systemInstruction",
+						prepareSystemInstructionFromDBPayload(systemInstruction, inputBean, chunk, qTypeConfig, "short-answer"));
+			}
+			logger.error("Final prompt payload after replacement (FAQ): " + promptPayload);
 		} catch (Exception e) {
 			logger.error("Error while generating Short Answer prompt", e);
 			throw new IOException("Failed to generate prompt", e);
 		}
-		return promptMessages;
+		return promptPayload;
 	}
 
 	@SuppressWarnings("unchecked")
-	public JSONArray getTrueFalsePrompt(InputBean inputBean, Chunk chunk) throws IOException {
+	public JSONObject getTrueFalsePrompt(InputBean inputBean, Chunk chunk) throws IOException {
 		logger.error("-----Inside getTrueFalsePrompt----");
 		QuestionTypeConfig qTypeConfig = inputBean.getQuestionTypeConfigMap().get("truefalse");
-		JSONArray promptMessages = new JSONArray();
+		JSONObject promptPayload = new JSONObject();
 		try {
 			JSONObject payloadFromGenAI = callGenAIUtility(
 				inputBean.getAIvendorCredNodeMap(),
@@ -135,20 +160,28 @@ public class GeminiPromptBuilder {
 			logger.error("Extracted contents array: " + contentsNode);
 			JSONParser parser = new JSONParser();
 			JSONArray dbMessages = (JSONArray) parser.parse(contentsNode.toString());
-			promptMessages = preparePromptFromDBPayload(dbMessages, inputBean, chunk, qTypeConfig, "TrueFalse");
-			logger.error("Final prompt messages after replacement (True/False): " + promptMessages);
+			JSONArray promptMessages = preparePromptFromDBPayload(dbMessages, inputBean, chunk, qTypeConfig, "TrueFalse");
+			promptPayload.put("contents", promptMessages);
+
+			JsonNode systemInstructionNode = payloadNode.get("systemInstruction");
+			if (systemInstructionNode != null) {
+				JSONObject systemInstruction = (JSONObject) parser.parse(systemInstructionNode.toString());
+				promptPayload.put("systemInstruction",
+						prepareSystemInstructionFromDBPayload(systemInstruction, inputBean, chunk, qTypeConfig, "TrueFalse"));
+			}
+			logger.error("Final prompt payload after replacement (True/False): " + promptPayload);
 		} catch (Exception e) {
 			logger.error("Error while generating True/False prompt", e);
 			throw new IOException("Failed to generate True/False prompt", e);
 		}
-		return promptMessages;
+		return promptPayload;
 	}
 
 	@SuppressWarnings("unchecked")
-	public JSONArray getFillInTheBlanksPrompt(InputBean inputBean, Chunk chunk) throws IOException {
+	public JSONObject getFillInTheBlanksPrompt(InputBean inputBean, Chunk chunk) throws IOException {
 		logger.error("-----Inside getFillInTheBlanksPrompt----");
 		QuestionTypeConfig qTypeConfig = inputBean.getQuestionTypeConfigMap().get("fillblanks");
-		JSONArray promptMessages = new JSONArray();
+		JSONObject promptPayload = new JSONObject();
 		try {
 			JSONObject payloadFromGenAI = callGenAIUtility(
 				inputBean.getAIvendorCredNodeMap(),
@@ -164,19 +197,27 @@ public class GeminiPromptBuilder {
 			logger.error("Extracted contents array: " + contentsNode);
 			JSONParser parser = new JSONParser();
 			JSONArray dbMessages = (JSONArray) parser.parse(contentsNode.toString());
-			promptMessages = preparePromptFromDBPayload(dbMessages, inputBean, chunk, qTypeConfig, "fill-in-the-blank");
-			logger.error("Final prompt messages after replacement (fill-in-the-blanks): " + promptMessages);
+			JSONArray promptMessages = preparePromptFromDBPayload(dbMessages, inputBean, chunk, qTypeConfig, "fill-in-the-blank");
+			promptPayload.put("contents", promptMessages);
+
+			JsonNode systemInstructionNode = payloadNode.get("systemInstruction");
+			if (systemInstructionNode != null) {
+				JSONObject systemInstruction = (JSONObject) parser.parse(systemInstructionNode.toString());
+				promptPayload.put("systemInstruction",
+						prepareSystemInstructionFromDBPayload(systemInstruction, inputBean, chunk, qTypeConfig, "fill-in-the-blank"));
+			}
+			logger.error("Final prompt payload after replacement (fill-in-the-blanks): " + promptPayload);
 		} catch (Exception e) {
 			logger.error("Error while generating Fill in the Blanks prompt", e);
 			throw new IOException("Failed to generate Fill in the Blanks prompt", e);
 		}
-		return promptMessages;
+		return promptPayload;
 	}
 
-	public JSONArray getComprehensionPrompt(InputBean inputBean, Chunk chunk) throws IOException {
+	public JSONObject getComprehensionPrompt(InputBean inputBean, Chunk chunk) throws IOException {
 		logger.error("-----Inside ComprehensionPrompt----");
 		QuestionTypeConfig qTypeConfig = inputBean.getQuestionTypeConfigMap().get("comprehensionmcq");
-		JSONArray promptMessages = new JSONArray();
+		JSONObject promptPayload = new JSONObject();
 		try {
 			JSONObject payloadFromGenAI = callGenAIUtility(
 				inputBean.getAIvendorCredNodeMap(),
@@ -192,13 +233,21 @@ public class GeminiPromptBuilder {
 			logger.error("Extracted contents array: " + contentsNode);
 			JSONParser parser = new JSONParser();
 			JSONArray dbMessages = (JSONArray) parser.parse(contentsNode.toString());
-			promptMessages = preparePromptFromDBPayload(dbMessages, inputBean, chunk, qTypeConfig, "comprehension");
-			logger.error("Final prompt messages after replacement (comprehension): " + promptMessages);
+			JSONArray promptMessages = preparePromptFromDBPayload(dbMessages, inputBean, chunk, qTypeConfig, "comprehension");
+			promptPayload.put("contents", promptMessages);
+
+			JsonNode systemInstructionNode = payloadNode.get("systemInstruction");
+			if (systemInstructionNode != null) {
+				JSONObject systemInstruction = (JSONObject) parser.parse(systemInstructionNode.toString());
+				promptPayload.put("systemInstruction",
+						prepareSystemInstructionFromDBPayload(systemInstruction, inputBean, chunk, qTypeConfig, "comprehension"));
+			}
+			logger.error("Final prompt payload after replacement (comprehension): " + promptPayload);
 		} catch (Exception e) {
 			logger.error("Error while generating comprehension prompt", e);
 			throw new IOException("Failed to generate comprehension prompt", e);
 		}
-		return promptMessages;
+		return promptPayload;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -219,7 +268,7 @@ public class GeminiPromptBuilder {
 			for (int j = 0; j < partsArray.size(); j++) {
 				JSONObject partItem = (JSONObject) partsArray.get(j);
 
-				// Gemini parts have only "text" key directly — no "type" key
+				// Gemini parts have only "text" key directly ï¿½ no "type" key
 				if (partItem.containsKey("text")) {
 					String text = (String) partItem.get("text");
 
@@ -257,6 +306,30 @@ public class GeminiPromptBuilder {
 		}
 
 		return updatedMessages;
+	}
+
+	@SuppressWarnings("unchecked")
+	public JSONObject prepareSystemInstructionFromDBPayload(JSONObject systemInstruction, InputBean inputBean, Chunk chunk,
+			QuestionTypeConfig qTypeConfig, String QuestionType) {
+		JSONArray partsArray = (JSONArray) systemInstruction.get("parts");
+		JSONArray updatedPartsArray = new JSONArray();
+
+		for (int j = 0; j < partsArray.size(); j++) {
+			JSONObject partItem = (JSONObject) partsArray.get(j);
+			if (partItem.containsKey("text")) {
+				String text = (String) partItem.get("text");
+				text = replaceAllPlaceholders(text, inputBean, chunk, qTypeConfig, QuestionType);
+				JSONObject updatedPart = new JSONObject();
+				updatedPart.put("text", text);
+				updatedPartsArray.add(updatedPart);
+			} else {
+				updatedPartsArray.add(partItem);
+			}
+		}
+
+		JSONObject updatedSystemInstruction = new JSONObject();
+		updatedSystemInstruction.put("parts", updatedPartsArray);
+		return updatedSystemInstruction;
 	}
 
 	private String replaceAllPlaceholders(String text, InputBean inputBean, Chunk chunk,
